@@ -1,0 +1,6 @@
+name: Iodide
+version: '1.0-SNAPSHOT'
+main: io.github.laptop59.iodide.Iodide
+api-version: '1.21'
+authors: [ Laptop59 ]
+description: Provides various useful tools for creating custom, textured GUIs and HUDs.
