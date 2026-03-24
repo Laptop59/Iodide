@@ -3,9 +3,14 @@ package io.github.laptop59.iodide.http;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import io.github.laptop59.iodide.Iodide;
+import net.kyori.adventure.resource.ResourcePackInfo;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 
 import java.io.*;
 import java.net.InetSocketAddress;
+import java.net.URI;
+import java.security.MessageDigest;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -14,6 +19,7 @@ import java.util.concurrent.Executors;
  */
 public class ResourcePackServer implements AutoCloseable {
     public HttpServer httpServer;
+    public String hash = null;
     public final int PORT = 10616;
 
     public void start() {
@@ -37,14 +43,7 @@ public class ResourcePackServer implements AutoCloseable {
     }
 
     private void sendPack(HttpExchange httpExchange) {
-        File file = null;
-
-        if (file == null) {
-            try {
-                httpExchange.sendResponseHeaders(404, -1);
-            } catch (IOException ignored) {}
-            return;
-        }
+        final File file = Iodide.INSTANCE.getDataFolder().toPath().resolve("resources.zip").toFile();
 
         try (
                 FileInputStream fileInputStream = new FileInputStream(file);
@@ -67,6 +66,42 @@ public class ResourcePackServer implements AutoCloseable {
                 httpExchange.sendResponseHeaders(500, -1);
             } catch (IOException ignored) {}
         } catch (Exception ignored) {}
+    }
+
+    public void updateHash() {
+        final File file = Iodide.INSTANCE.getDataFolder().toPath().resolve("resources.zip").toFile();
+        try (FileInputStream fileInputStream = new FileInputStream(file)) {
+            final MessageDigest digest = MessageDigest.getInstance("SHA-1");
+            final byte[] buf = new byte[8192];
+            int read;
+            while ((read = fileInputStream.read(buf)) != -1) {
+                digest.update(buf, 0, read);
+            }
+            hash = bytesToString(digest.digest());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    String bytesToString(byte[] bytes) {
+        StringBuilder builder = new StringBuilder(bytes.length * 2);
+        for (byte b : bytes) {
+            builder.append(String.format("%02x", b & 0xff));
+        }
+        return builder.toString();
+    }
+
+    public void sendPackToEveryone() {
+        Bukkit.getServer().getOnlinePlayers().forEach(this::sendPackToPlayer);
+    }
+
+    public void sendPackToPlayer(Player player) {
+        player.sendResourcePacks(
+            ResourcePackInfo.resourcePackInfo()
+                .uri(URI.create("http://127.0.0.1:" + PORT + "/"))
+                .hash(hash)
+                .build()
+        );
     }
 
     @Override

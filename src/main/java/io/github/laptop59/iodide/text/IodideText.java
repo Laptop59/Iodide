@@ -6,13 +6,15 @@ import net.kyori.adventure.text.Component;
 
 /** Contains helpers when dealing with Iodide's text. */
 public class IodideText {
+    private IodideText() {}
+
     /** Font used in advancing. */
     public static final Key ADVANCE = Key.key(Iodide.NAMESPACE, "advance");
 
     /**
      * Gets a text component that advances by the given number of pixels.
      *
-     * @param advance The number of pixels advanced to the right, negative to go left instead.
+     * @param advance The number of pixels to advance to the right, negative to go left instead.
      * @return A text component that does the required action.
      */
     public static Component getAdvanceComponent(int advance) {
@@ -24,7 +26,7 @@ public class IodideText {
     /**
      * Gets text that advances by the given number of pixels when combined with font {@link IodideText#ADVANCE}.
      *
-     * @param advance The number of pixels advanced to the right, negative to go left instead.
+     * @param advance The number of pixels to advance to the right, negative to go left instead.
      * @return A string that does the required action.
      */
     public static String getAdvanceString(int advance) {
